@@ -15,8 +15,21 @@ let currentUser = null;
 let cursor = null;
 let hasMore = true;
 
-loginBtn.onclick = () => loginWithGoogle();
-logoutBtn.onclick = () => logout();
+loginBtn.onclick = async () => {
+  try {
+    await loginWithGoogle();
+  } catch (e) {
+    console.error('[로그인 오류]', e);
+    alert(`Google 로그인 실패: ${e.code || ''} ${e.message || ''}`);
+  }
+};
+logoutBtn.onclick = async () => {
+  try {
+    await logout();
+  } catch (e) {
+    console.error('[로그아웃 오류]', e);
+  }
+};
 generateBtn.onclick = onGenerate;
 loadMoreBtn.onclick = () => loadTickets(true);
 
@@ -97,8 +110,6 @@ function getNextDrawNo() {
 }
 
 async function onGenerate() {
-  if (!currentUser) return alert('먼저 로그인해 주세요.');
-
   const count = Math.min(20, Math.max(1, Number(genCountInput.value || 1)));
   const lines = Array.from({ length: count }, () => randomLine());
   const drawNo = getNextDrawNo();
@@ -108,6 +119,12 @@ async function onGenerate() {
     .map((line, i) => `<div class="ticket"><b>${i + 1}게임</b> ${line.join(', ')}</div>`)
     .join('');
 
+  // 로그인 없이도 번호 생성은 가능. 로그인 상태면 Firestore에 저장.
+  if (!currentUser) {
+    alert('번호를 생성했어요! (비로그인 상태라 저장은 하지 않았습니다)');
+    return;
+  }
+
   await addGeneratedTicket({
     uid: currentUser.uid,
     email: currentUser.email,
@@ -115,7 +132,7 @@ async function onGenerate() {
     lines,
   });
 
-  alert('저장 완료!');
+  alert('번호 생성 + 저장 완료!');
   ticketList.innerHTML = '';
   cursor = null;
   hasMore = true;
