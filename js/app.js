@@ -47,13 +47,13 @@ logoutBtn.onclick = async () => {
   }
 };
 
-generateBtn.onclick = onGenerate;
-loadMoreBtn.onclick = () => loadTickets(true);
-tabUploadBtn.onclick = () => switchRecordTab('upload');
-tabManualBtn.onclick = () => switchRecordTab('manual');
-uploadAnalyzeBtn.onclick = onUploadAnalyzeAndSave;
-manualSaveBtn.onclick = onManualSave;
-recordOpenBtn.onclick = toggleRecordPanel;
+generateBtn?.addEventListener('click', onGenerate);
+loadMoreBtn?.addEventListener('click', () => loadTickets(true));
+tabUploadBtn?.addEventListener('click', () => switchRecordTab('upload'));
+tabManualBtn?.addEventListener('click', () => switchRecordTab('manual'));
+uploadAnalyzeBtn?.addEventListener('click', onUploadAnalyzeAndSave);
+manualSaveBtn?.addEventListener('click', onManualSave);
+recordOpenBtn?.addEventListener('click', toggleRecordPanel);
 
 function switchRecordTab(mode) {
   const isUpload = mode === 'upload';
@@ -64,6 +64,7 @@ function switchRecordTab(mode) {
 }
 
 function toggleRecordPanel() {
+  if (!recordPanel || !recordOpenBtn) return;
   const isHidden = recordPanel.classList.toggle('hidden');
   recordOpenBtn.textContent = isHidden ? '기록 등록 열기' : '기록 등록 닫기';
 }
@@ -125,8 +126,8 @@ watchAuth(async (user) => {
     userEmailEl.textContent = user.email;
     recordCard.classList.remove('hidden');
     drawCard.classList.remove('hidden');
-    recordPanel.classList.add('hidden');
-    recordOpenBtn.textContent = '기록 등록 열기';
+    recordPanel?.classList.add('hidden');
+    if (recordOpenBtn) recordOpenBtn.textContent = '기록 등록 열기';
     await loadTickets(false);
   } else {
     loginBtn.classList.remove('hidden');
@@ -134,8 +135,8 @@ watchAuth(async (user) => {
     userEmailEl.textContent = '';
     recordCard.classList.add('hidden');
     drawCard.classList.add('hidden');
-    recordPanel.classList.add('hidden');
-    recordOpenBtn.textContent = '기록 등록 열기';
+    recordPanel?.classList.add('hidden');
+    if (recordOpenBtn) recordOpenBtn.textContent = '기록 등록 열기';
     ticketList.innerHTML = '';
     loadMoreBtn.classList.add('hidden');
   }
