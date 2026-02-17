@@ -159,11 +159,8 @@ async function onGenerate() {
   pendingGeneratedLine = line;
 
   generatedList.innerHTML = `
-    <div class="ticket">
-      <b>추천 1조합</b>
-      <div class="nums">${line.map((n) => `<span class="ball ${ballClass(n)}">${String(n).padStart(2, '0')}</span>`).join('')}</div>
-      <p class="muted">다시 누르면 새 조합을 추천해드려요.</p>
-    </div>
+    <div class="nums">${line.map((n) => `<span class="ball ${ballClass(n)}">${String(n).padStart(2, '0')}</span>`).join('')}</div>
+    <p class="muted">다시 누르면 새 조합을 추천해드려요.</p>
   `;
 }
 

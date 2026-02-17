@@ -16,7 +16,10 @@
           </div>
         </div>
         <div id="auth-box">
-          <button id="login-btn">Google 로그인</button>
+          <button id="login-btn" class="google-btn" aria-label="Google로 로그인">
+            <span class="gmark">G</span>
+            <span>Google로 로그인</span>
+          </button>
           <span id="user-email"></span>
           <button id="logout-btn" class="hidden">로그아웃</button>
         </div>
@@ -30,7 +33,7 @@
 
     <main>
       <section class="card">
-        <h2 class="section-title">1) 로또 번호 뽑기</h2>
+        <h2 class="section-title">로또 번호 뽑기</h2>
         <div class="row">
           <button id="generate-btn">추천번호 뽑기</button>
         </div>
@@ -38,7 +41,7 @@
       </section>
 
       <section id="record-card" class="card hidden">
-        <h2>(로그인시) 내 기록 저장하기</h2>
+        <h2 class="section-title">내 기록 저장하기</h2>
         <div class="row">
           <input id="record-draw-no" type="number" min="1" placeholder="회차 입력 (예: 1206)" />
         </div>
@@ -68,7 +71,7 @@
       </section>
 
       <section id="draw-card" class="card hidden">
-        <h2 class="section-title">2) 추첨 리스트</h2>
+        <h2 class="section-title">추첨 리스트</h2>
         <div id="ticket-list"></div>
         <button id="load-more-btn">더 보기</button>
       </section>
