@@ -8,13 +8,21 @@
   </head>
   <body>
     <header>
-      <h1>🎟️ Lotto Gaemi</h1>
+      <div class="brand">
+        <img src="./assets/gaemi-profile.jpg" alt="개미 프로필" class="profile" />
+        <div>
+          <h1>🎟️ Lotto Gaemi</h1>
+          <p class="muted">개미가 로또 기록을 도와드려요 🐜</p>
+        </div>
+      </div>
       <div id="auth-box">
         <button id="login-btn">Google 로그인</button>
         <button id="logout-btn" class="hidden">로그아웃</button>
         <span id="user-email"></span>
       </div>
     </header>
+
+    <section id="gaemi-line" class="gaemi-line">개미 한마디를 불러오는 중...</section>
 
     <main>
       <section class="card">

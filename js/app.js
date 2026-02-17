@@ -1,5 +1,5 @@
 import { loginWithGoogle, logout, watchAuth } from './auth.js';
-import { addGeneratedTicket, fetchTicketsPage, getDrawResult } from './db.js';
+import { addGeneratedTicket, fetchTicketsPage, getDrawResult, getLatestDraw } from './db.js';
 
 const loginBtn = document.getElementById('login-btn');
 const logoutBtn = document.getElementById('logout-btn');
@@ -9,6 +9,7 @@ const genCountInput = document.getElementById('gen-count');
 const generatedList = document.getElementById('generated-list');
 const ticketList = document.getElementById('ticket-list');
 const loadMoreBtn = document.getElementById('load-more-btn');
+const gaemiLineEl = document.getElementById('gaemi-line');
 
 let currentUser = null;
 let cursor = null;
@@ -18,6 +19,52 @@ loginBtn.onclick = () => loginWithGoogle();
 logoutBtn.onclick = () => logout();
 generateBtn.onclick = onGenerate;
 loadMoreBtn.onclick = () => loadTickets(true);
+
+function getKstNow() {
+  // 한국 시간 기준 계산
+  return new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
+}
+
+function getNextSaturdayDeadlineKst() {
+  const now = getKstNow();
+  const target = new Date(now);
+  const day = now.getDay(); // 일=0 ... 토=6
+  const diff = (6 - day + 7) % 7;
+  target.setDate(now.getDate() + diff);
+  target.setHours(20, 0, 0, 0); // 토요일 20:00 마감
+
+  if (target <= now) target.setDate(target.getDate() + 7);
+  return target;
+}
+
+function formatRemain(ms) {
+  const totalSec = Math.max(0, Math.floor(ms / 1000));
+  const d = Math.floor(totalSec / 86400);
+  const h = Math.floor((totalSec % 86400) / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  return d > 0 ? `${d}일 ${h}시간 ${m}분` : `${h}시간 ${m}분`;
+}
+
+async function updateGaemiLine() {
+  const deadline = getNextSaturdayDeadlineKst();
+  const remainText = formatRemain(deadline.getTime() - getKstNow().getTime());
+
+  try {
+    const latest = await getLatestDraw();
+    if (latest?.numbers?.length === 6) {
+      const nums = latest.numbers.map((n) => String(n).padStart(2, '0')).join(', ');
+      gaemiLineEl.textContent = `개미 한마디 🐜 직전 ${latest.drawNo}회 당첨번호: ${nums} + 보너스 ${latest.bonus} · 판매 마감까지 ${remainText}`;
+      return;
+    }
+  } catch (_) {
+    // draws 데이터가 아직 없으면 마감 카운트다운만 노출
+  }
+
+  gaemiLineEl.textContent = `개미 한마디 🐜 이번 회차 로또복권 판매 마감까지 ${remainText} 남았어요 (토요일 20:00)`;
+}
+
+updateGaemiLine();
+setInterval(updateGaemiLine, 60 * 1000);
 
 watchAuth(async (user) => {
   currentUser = user;

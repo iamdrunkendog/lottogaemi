@@ -18,7 +18,7 @@ import { db } from './firebase.js';
 //   uid, email, drawNo, lines: [[1,2,3,4,5,6], ...],
 //   status: 'pending'|'win'|'lose', resultSummary,
 //   source: 'manual'|'qr'|'generator', createdAt
-// }
+// } (티켓 원본 저장)
 
 export async function addGeneratedTicket({ uid, email, drawNo, lines }) {
   return addDoc(collection(db, 'tickets'), {
@@ -63,4 +63,23 @@ export async function getDrawResult(drawNo) {
   const snap = await getDoc(ref);
   if (!snap.exists()) return null;
   return snap.data();
+}
+
+// draws 컬렉션에서 가장 최신 회차를 찾아 반환
+export async function getLatestDraw() {
+  const snap = await getDocs(collection(db, 'draws'));
+  if (snap.empty) return null;
+
+  let latest = null;
+  for (const d of snap.docs) {
+    const data = d.data() || {};
+    const drawNo = Number(data.drawNo ?? d.id);
+    if (!Number.isFinite(drawNo)) continue;
+
+    if (!latest || drawNo > latest.drawNo) {
+      latest = { drawNo, ...data };
+    }
+  }
+
+  return latest;
 }
