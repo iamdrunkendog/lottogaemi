@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lotto Gaemi</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>🎟️ Lotto Gaemi</h1>
+      <div id="auth-box">
+        <button id="login-btn">Google 로그인</button>
+        <button id="logout-btn" class="hidden">로그아웃</button>
+        <span id="user-email"></span>
+      </div>
+    </header>
+
+    <main>
+      <section class="card">
+        <h2>1) 로또번호 뽑기</h2>
+        <div class="row">
+          <input id="gen-count" type="number" min="1" max="20" value="1" />
+          <button id="generate-btn">번호 생성</button>
+        </div>
+        <div id="generated-list"></div>
+      </section>
+
+      <section class="card">
+        <h2>2) 추첨 리스트 (최신순)</h2>
+        <div id="ticket-list"></div>
+        <button id="load-more-btn">더 보기</button>
+      </section>
+    </main>
+
+    <script type="module" src="./js/app.js"></script>
+  </body>
+</html>
