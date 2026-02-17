@@ -8,17 +8,19 @@
   </head>
   <body>
     <header>
-      <div class="brand">
-        <img src="./assets/gaemi-profile.jpg" alt="개미 프로필" class="profile" />
-        <div>
-          <h1>🎟️ Lotto Gaemi</h1>
-          <p class="muted">개미가 로또 기록을 도와드려요 🐜</p>
+      <div class="header-inner">
+        <div class="brand">
+          <img src="./assets/gaemi-profile.jpg" alt="개미 프로필" class="profile" />
+          <div>
+            <h1>🎟️ Lotto Gaemi</h1>
+            <p class="muted">개미가 로또 기록을 도와드려요 🐜</p>
+          </div>
         </div>
-      </div>
-      <div id="auth-box">
-        <button id="login-btn">Google 로그인</button>
-        <button id="logout-btn" class="hidden">로그아웃</button>
-        <span id="user-email"></span>
+        <div id="auth-box">
+          <button id="login-btn">Google 로그인</button>
+          <button id="logout-btn" class="hidden">로그아웃</button>
+          <span id="user-email"></span>
+        </div>
       </div>
     </header>
 
@@ -31,14 +33,21 @@
       <section class="card">
         <h2>1) 로또번호 뽑기</h2>
         <div class="row">
-          <input id="gen-count" type="number" min="1" max="20" value="1" />
-          <button id="generate-btn">번호 생성</button>
+          <button id="generate-btn">추천번호 뽑기</button>
         </div>
         <div id="generated-list"></div>
+
+        <div id="save-box" class="save-box hidden">
+          <p class="muted">로그인 사용자용 기록 저장</p>
+          <div class="row">
+            <input id="draw-no-input" type="number" min="1" placeholder="회차 입력 (예: 1206)" />
+            <button id="save-ticket-btn">이 번호 기록 저장</button>
+          </div>
+        </div>
       </section>
 
       <section class="card">
-        <h2>2) 추첨 리스트 (최신순)</h2>
+        <h2>2) 추첨 리스트</h2>
         <div id="ticket-list"></div>
         <button id="load-more-btn">더 보기</button>
       </section>

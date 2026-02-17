@@ -5,8 +5,10 @@ const loginBtn = document.getElementById('login-btn');
 const logoutBtn = document.getElementById('logout-btn');
 const userEmailEl = document.getElementById('user-email');
 const generateBtn = document.getElementById('generate-btn');
-const genCountInput = document.getElementById('gen-count');
 const generatedList = document.getElementById('generated-list');
+const saveBox = document.getElementById('save-box');
+const saveTicketBtn = document.getElementById('save-ticket-btn');
+const drawNoInput = document.getElementById('draw-no-input');
 const ticketList = document.getElementById('ticket-list');
 const loadMoreBtn = document.getElementById('load-more-btn');
 const gaemiLineEl = document.getElementById('gaemi-line');
@@ -14,6 +16,7 @@ const gaemiLineEl = document.getElementById('gaemi-line');
 let currentUser = null;
 let cursor = null;
 let hasMore = true;
+let pendingGeneratedLine = null;
 
 loginBtn.onclick = async () => {
   try {
@@ -31,6 +34,7 @@ logoutBtn.onclick = async () => {
   }
 };
 generateBtn.onclick = onGenerate;
+saveTicketBtn.onclick = onSaveTicket;
 loadMoreBtn.onclick = () => loadTickets(true);
 
 function getKstNow() {
@@ -89,11 +93,14 @@ watchAuth(async (user) => {
     loginBtn.classList.add('hidden');
     logoutBtn.classList.remove('hidden');
     userEmailEl.textContent = user.email;
+    saveBox.classList.remove('hidden');
     await loadTickets(false);
   } else {
     loginBtn.classList.remove('hidden');
     logoutBtn.classList.add('hidden');
     userEmailEl.textContent = '';
+    saveBox.classList.add('hidden');
+    ticketList.innerHTML = '<p class="muted">로그인하면 저장한 회차 기록을 볼 수 있어요.</p>';
     loadMoreBtn.classList.add('hidden');
   }
 });
@@ -104,24 +111,35 @@ function randomLine() {
   return [...s].sort((a, b) => a - b);
 }
 
-function getNextDrawNo() {
-  // TODO: 실제 동행복권 회차 계산/조회 로직으로 교체 가능
-  return Number(prompt('저장할 회차를 입력하세요 (예: 1206)', '1206'));
+async function onGenerate() {
+  // 요구사항: 번호 생성은 단순 추천 1조합만 제공
+  const line = randomLine();
+  pendingGeneratedLine = line;
+
+  generatedList.innerHTML = `
+    <div class="ticket">
+      <b>추천 1조합</b>
+      <div class="nums">${line.map((n) => `<span class="ball">${String(n).padStart(2, '0')}</span>`).join('')}</div>
+      <p class="muted">필요하면 다시 눌러 새 조합을 추천받으세요.</p>
+    </div>
+  `;
 }
 
-async function onGenerate() {
-  const count = Math.min(20, Math.max(1, Number(genCountInput.value || 1)));
-  const lines = Array.from({ length: count }, () => randomLine());
-  const drawNo = getNextDrawNo();
-  if (!drawNo) return;
-
-  generatedList.innerHTML = lines
-    .map((line, i) => `<div class="ticket"><b>${i + 1}게임</b> ${line.join(', ')}</div>`)
-    .join('');
-
-  // 로그인 없이도 번호 생성은 가능. 로그인 상태면 Firestore에 저장.
+async function onSaveTicket() {
   if (!currentUser) {
-    alert('번호를 생성했어요! (비로그인 상태라 저장은 하지 않았습니다)');
+    alert('로그인 후에만 회차 기록 저장이 가능합니다.');
+    return;
+  }
+
+  if (!pendingGeneratedLine) {
+    alert('먼저 추천번호를 생성해 주세요.');
+    return;
+  }
+
+  const drawNo = Number(drawNoInput.value);
+  if (!drawNo) {
+    alert('저장할 회차를 입력해 주세요.');
+    drawNoInput.focus();
     return;
   }
 
@@ -129,10 +147,11 @@ async function onGenerate() {
     uid: currentUser.uid,
     email: currentUser.email,
     drawNo,
-    lines,
+    lines: [pendingGeneratedLine],
   });
 
-  alert('번호 생성 + 저장 완료!');
+  alert('회차 기록 저장 완료!');
+  drawNoInput.value = '';
   ticketList.innerHTML = '';
   cursor = null;
   hasMore = true;
