@@ -20,13 +20,13 @@ import { db } from './firebase.js';
 //   source: 'manual'|'qr'|'generator', createdAt
 // } (티켓 원본 저장)
 
-export async function addGeneratedTicket({ uid, email, drawNo, lines }) {
+export async function addGeneratedTicket({ uid, email, drawNo, lines, source = 'generator' }) {
   return addDoc(collection(db, 'tickets'), {
     uid,
     email,
     drawNo,
     lines,
-    source: 'generator',
+    source,
     status: 'pending',
     createdAt: serverTimestamp(),
   });

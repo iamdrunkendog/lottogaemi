@@ -170,17 +170,49 @@ async function onGenerate() {
 async function onUploadAnalyzeAndSave() {
   if (!currentUser) return alert('로그인 후 이용해 주세요.');
 
-  const drawNo = getRecordDrawNo();
-  if (!drawNo) return;
-
   const file = ticketImageInput.files?.[0];
   if (!file) {
     alert('복권 사진을 먼저 업로드해 주세요.');
     return;
   }
 
-  // OCR/QR 인식은 다음 단계에서 연결 예정 (현재는 UI/저장 흐름만 준비)
-  alert('OCR/QR 인식 기능을 다음 단계에서 연결할게요. 우선 직접 입력하기로 저장 가능해요.');
+  try {
+    const qrRaw = await decodeQrFromImageFile(file);
+    if (!qrRaw) {
+      alert('QR코드를 찾지 못했어요. QR이 선명하게 보이도록 다시 촬영해 주세요.');
+      return;
+    }
+
+    const parsed = parseDhlotteryQrUrl(qrRaw);
+    if (!parsed) {
+      alert('유효한 동행복권 QR 형식이 아니어서 저장하지 않았어요.');
+      return;
+    }
+
+    // 회차 입력값이 있으면 우선 사용, 없으면 QR 회차 자동 사용
+    const inputDrawNo = Number(recordDrawNoInput.value);
+    const drawNo = inputDrawNo || parsed.drawNo;
+
+    await addGeneratedTicket({
+      uid: currentUser.uid,
+      email: currentUser.email,
+      drawNo,
+      lines: parsed.lines,
+      source: 'qr',
+    });
+
+    recordDrawNoInput.value = String(drawNo);
+    ticketImageInput.value = '';
+    alert(`QR 인식 성공! ${drawNo}회차 ${parsed.lines.length}줄을 자동 등록했어요.`);
+
+    ticketList.innerHTML = '';
+    cursor = null;
+    hasMore = true;
+    await loadTickets(false);
+  } catch (e) {
+    console.error('[QR 인식 오류]', e);
+    alert('QR 인식 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.');
+  }
 }
 
 function parseManualLine(text) {
@@ -194,6 +226,69 @@ function parseManualLine(text) {
   const unique = [...new Set(nums)];
   if (unique.length !== 6) return null;
   return unique.sort((a, b) => a - b);
+}
+
+function parseDhlotteryQrUrl(raw) {
+  let url;
+  try {
+    url = new URL(raw);
+  } catch (_) {
+    return null;
+  }
+
+  if (!url.hostname.includes('dhlottery.co.kr')) return null;
+  const v = url.searchParams.get('v');
+  if (!v) return null;
+
+  const drawNo = Number((v.match(/^\d{4,5}/) || [])[0]);
+  if (!drawNo) return null;
+
+  const lineChunks = [...v.matchAll(/q(\d{12})/g)].map((m) => m[1]);
+  if (!lineChunks.length) return null;
+
+  const lines = lineChunks
+    .map((chunk) => {
+      const nums = chunk.match(/.{1,2}/g).map((x) => Number(x));
+      if (nums.length !== 6) return null;
+      if (nums.some((n) => n < 1 || n > 45)) return null;
+      if (new Set(nums).size !== 6) return null;
+      return nums.sort((a, b) => a - b);
+    })
+    .filter(Boolean)
+    .slice(0, 5);
+
+  if (!lines.length) return null;
+  return { drawNo, lines };
+}
+
+async function decodeQrFromImageFile(file) {
+  const jsQR = (await import('https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.es6.min.js')).default;
+
+  const bitmap = await createImageBitmap(file);
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+  // 1차: 원본 전체 스캔
+  canvas.width = bitmap.width;
+  canvas.height = bitmap.height;
+  ctx.drawImage(bitmap, 0, 0);
+  let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  let result = jsQR(imageData.data, canvas.width, canvas.height, { inversionAttempts: 'attemptBoth' });
+  if (result?.data) return result.data;
+
+  // 2차: 중앙 영역 확대 스캔 (복권 전체 촬영 대비)
+  const cropW = Math.floor(bitmap.width * 0.7);
+  const cropH = Math.floor(bitmap.height * 0.7);
+  const sx = Math.floor((bitmap.width - cropW) / 2);
+  const sy = Math.floor((bitmap.height - cropH) / 2);
+
+  canvas.width = cropW;
+  canvas.height = cropH;
+  ctx.drawImage(bitmap, sx, sy, cropW, cropH, 0, 0, cropW, cropH);
+  imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  result = jsQR(imageData.data, canvas.width, canvas.height, { inversionAttempts: 'attemptBoth' });
+
+  return result?.data || null;
 }
 
 async function onManualSave() {
