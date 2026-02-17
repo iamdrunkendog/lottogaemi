@@ -18,6 +18,7 @@ const ticketImageInput = document.getElementById('ticket-image-input');
 const uploadAnalyzeBtn = document.getElementById('upload-analyze-btn');
 const manualSaveBtn = document.getElementById('manual-save-btn');
 
+const drawCard = document.getElementById('draw-card');
 const ticketList = document.getElementById('ticket-list');
 const loadMoreBtn = document.getElementById('load-more-btn');
 const gaemiLineEl = document.getElementById('gaemi-line');
@@ -115,16 +116,26 @@ watchAuth(async (user) => {
     logoutBtn.classList.remove('hidden');
     userEmailEl.textContent = user.email;
     recordCard.classList.remove('hidden');
+    drawCard.classList.remove('hidden');
     await loadTickets(false);
   } else {
     loginBtn.classList.remove('hidden');
     logoutBtn.classList.add('hidden');
     userEmailEl.textContent = '';
     recordCard.classList.add('hidden');
-    ticketList.innerHTML = '<p class="muted">로그인하면 저장한 회차 기록을 볼 수 있어요.</p>';
+    drawCard.classList.add('hidden');
+    ticketList.innerHTML = '';
     loadMoreBtn.classList.add('hidden');
   }
 });
+
+function ballClass(n) {
+  if (n <= 10) return 'ball-yellow';
+  if (n <= 20) return 'ball-blue';
+  if (n <= 30) return 'ball-red';
+  if (n <= 40) return 'ball-gray';
+  return 'ball-green';
+}
 
 function randomLine() {
   const s = new Set();
@@ -150,7 +161,7 @@ async function onGenerate() {
   generatedList.innerHTML = `
     <div class="ticket">
       <b>추천 1조합</b>
-      <div class="nums">${line.map((n) => `<span class="ball">${String(n).padStart(2, '0')}</span>`).join('')}</div>
+      <div class="nums">${line.map((n) => `<span class="ball ${ballClass(n)}">${String(n).padStart(2, '0')}</span>`).join('')}</div>
       <p class="muted">다시 누르면 새 조합을 추천해드려요.</p>
     </div>
   `;
@@ -260,7 +271,7 @@ async function loadTickets(append = true) {
     const { badge, lineResults } = await decorateTicketStatus(t);
     const linesHtml = t.lines
       .map((line, idx) => {
-        const balls = line.map((n) => `<span class="ball">${String(n).padStart(2, '0')}</span>`).join('');
+        const balls = line.map((n) => `<span class="ball ${ballClass(n)}">${String(n).padStart(2, '0')}</span>`).join('');
         const result = lineResults[idx] ? ` <span class="muted">→ ${lineResults[idx]}</span>` : '';
         return `<div class="nums">${balls}${result}</div>`;
       })
