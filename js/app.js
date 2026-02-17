@@ -4,11 +4,20 @@ import { addGeneratedTicket, fetchTicketsPage, getDrawResult, getLatestDraw } fr
 const loginBtn = document.getElementById('login-btn');
 const logoutBtn = document.getElementById('logout-btn');
 const userEmailEl = document.getElementById('user-email');
+
 const generateBtn = document.getElementById('generate-btn');
 const generatedList = document.getElementById('generated-list');
-const saveBox = document.getElementById('save-box');
-const saveTicketBtn = document.getElementById('save-ticket-btn');
-const drawNoInput = document.getElementById('draw-no-input');
+
+const recordCard = document.getElementById('record-card');
+const recordDrawNoInput = document.getElementById('record-draw-no');
+const tabUploadBtn = document.getElementById('tab-upload');
+const tabManualBtn = document.getElementById('tab-manual');
+const panelUpload = document.getElementById('panel-upload');
+const panelManual = document.getElementById('panel-manual');
+const ticketImageInput = document.getElementById('ticket-image-input');
+const uploadAnalyzeBtn = document.getElementById('upload-analyze-btn');
+const manualSaveBtn = document.getElementById('manual-save-btn');
+
 const ticketList = document.getElementById('ticket-list');
 const loadMoreBtn = document.getElementById('load-more-btn');
 const gaemiLineEl = document.getElementById('gaemi-line');
@@ -26,6 +35,7 @@ loginBtn.onclick = async () => {
     alert(`Google 로그인 실패: ${e.code || ''} ${e.message || ''}`);
   }
 };
+
 logoutBtn.onclick = async () => {
   try {
     await logout();
@@ -33,9 +43,21 @@ logoutBtn.onclick = async () => {
     console.error('[로그아웃 오류]', e);
   }
 };
+
 generateBtn.onclick = onGenerate;
-saveTicketBtn.onclick = onSaveTicket;
 loadMoreBtn.onclick = () => loadTickets(true);
+tabUploadBtn.onclick = () => switchRecordTab('upload');
+tabManualBtn.onclick = () => switchRecordTab('manual');
+uploadAnalyzeBtn.onclick = onUploadAnalyzeAndSave;
+manualSaveBtn.onclick = onManualSave;
+
+function switchRecordTab(mode) {
+  const isUpload = mode === 'upload';
+  tabUploadBtn.classList.toggle('active', isUpload);
+  tabManualBtn.classList.toggle('active', !isUpload);
+  panelUpload.classList.toggle('hidden', !isUpload);
+  panelManual.classList.toggle('hidden', isUpload);
+}
 
 function getKstNow() {
   // 한국 시간 기준 계산
@@ -45,11 +67,10 @@ function getKstNow() {
 function getNextSaturdayDeadlineKst() {
   const now = getKstNow();
   const target = new Date(now);
-  const day = now.getDay(); // 일=0 ... 토=6
+  const day = now.getDay();
   const diff = (6 - day + 7) % 7;
   target.setDate(now.getDate() + diff);
-  target.setHours(20, 0, 0, 0); // 토요일 20:00 마감
-
+  target.setHours(20, 0, 0, 0);
   if (target <= now) target.setDate(target.getDate() + 7);
   return target;
 }
@@ -70,14 +91,14 @@ async function updateGaemiLine() {
     const latest = await getLatestDraw();
     if (latest?.numbers?.length === 6) {
       const nums = latest.numbers.map((n) => String(n).padStart(2, '0')).join(', ');
-      gaemiLineEl.textContent = `개미 한마디 🐜 직전 ${latest.drawNo}회 당첨번호: ${nums} + 보너스 ${latest.bonus} · 판매 마감까지 ${remainText}`;
+      gaemiLineEl.textContent = `직전 ${latest.drawNo}회 당첨번호: ${nums} + 보너스 ${latest.bonus} · 판매 마감까지 ${remainText}`;
       return;
     }
   } catch (_) {
     // draws 데이터가 아직 없으면 마감 카운트다운만 노출
   }
 
-  gaemiLineEl.textContent = `개미 한마디 🐜 이번 회차 로또복권 판매 마감까지 ${remainText} 남았어요 (토요일 20:00)`;
+  gaemiLineEl.textContent = `이번 회차 로또복권 판매 마감까지 ${remainText} 남았어요 (토요일 20:00)`;
 }
 
 updateGaemiLine();
@@ -93,13 +114,13 @@ watchAuth(async (user) => {
     loginBtn.classList.add('hidden');
     logoutBtn.classList.remove('hidden');
     userEmailEl.textContent = user.email;
-    saveBox.classList.remove('hidden');
+    recordCard.classList.remove('hidden');
     await loadTickets(false);
   } else {
     loginBtn.classList.remove('hidden');
     logoutBtn.classList.add('hidden');
     userEmailEl.textContent = '';
-    saveBox.classList.add('hidden');
+    recordCard.classList.add('hidden');
     ticketList.innerHTML = '<p class="muted">로그인하면 저장한 회차 기록을 볼 수 있어요.</p>';
     loadMoreBtn.classList.add('hidden');
   }
@@ -111,8 +132,18 @@ function randomLine() {
   return [...s].sort((a, b) => a - b);
 }
 
+function getRecordDrawNo() {
+  const drawNo = Number(recordDrawNoInput.value);
+  if (!drawNo) {
+    alert('회차를 입력해 주세요.');
+    recordDrawNoInput.focus();
+    return null;
+  }
+  return drawNo;
+}
+
 async function onGenerate() {
-  // 요구사항: 번호 생성은 단순 추천 1조합만 제공
+  // 번호 생성은 단순 추천 1조합만 제공
   const line = randomLine();
   pendingGeneratedLine = line;
 
@@ -120,26 +151,54 @@ async function onGenerate() {
     <div class="ticket">
       <b>추천 1조합</b>
       <div class="nums">${line.map((n) => `<span class="ball">${String(n).padStart(2, '0')}</span>`).join('')}</div>
-      <p class="muted">필요하면 다시 눌러 새 조합을 추천받으세요.</p>
+      <p class="muted">다시 누르면 새 조합을 추천해드려요.</p>
     </div>
   `;
 }
 
-async function onSaveTicket() {
-  if (!currentUser) {
-    alert('로그인 후에만 회차 기록 저장이 가능합니다.');
+async function onUploadAnalyzeAndSave() {
+  if (!currentUser) return alert('로그인 후 이용해 주세요.');
+
+  const drawNo = getRecordDrawNo();
+  if (!drawNo) return;
+
+  const file = ticketImageInput.files?.[0];
+  if (!file) {
+    alert('복권 사진을 먼저 업로드해 주세요.');
     return;
   }
 
-  if (!pendingGeneratedLine) {
-    alert('먼저 추천번호를 생성해 주세요.');
-    return;
-  }
+  // OCR/QR 인식은 다음 단계에서 연결 예정 (현재는 UI/저장 흐름만 준비)
+  alert('OCR/QR 인식 기능을 다음 단계에서 연결할게요. 우선 직접 입력하기로 저장 가능해요.');
+}
 
-  const drawNo = Number(drawNoInput.value);
-  if (!drawNo) {
-    alert('저장할 회차를 입력해 주세요.');
-    drawNoInput.focus();
+function parseManualLine(text) {
+  const nums = (text || '')
+    .split(/[^0-9]+/)
+    .filter(Boolean)
+    .map((n) => Number(n));
+
+  if (nums.length !== 6) return null;
+  if (nums.some((n) => n < 1 || n > 45)) return null;
+  const unique = [...new Set(nums)];
+  if (unique.length !== 6) return null;
+  return unique.sort((a, b) => a - b);
+}
+
+async function onManualSave() {
+  if (!currentUser) return alert('로그인 후 이용해 주세요.');
+
+  const drawNo = getRecordDrawNo();
+  if (!drawNo) return;
+
+  const inputs = [...document.querySelectorAll('.manual-line')];
+  const lines = inputs
+    .map((el) => parseManualLine(el.value.trim()))
+    .filter(Boolean)
+    .slice(0, 5);
+
+  if (lines.length === 0) {
+    alert('최소 1줄 이상 올바르게 입력해 주세요. (예: 1,3,11,19,29,32)');
     return;
   }
 
@@ -147,11 +206,15 @@ async function onSaveTicket() {
     uid: currentUser.uid,
     email: currentUser.email,
     drawNo,
-    lines: [pendingGeneratedLine],
+    lines,
   });
 
-  alert('회차 기록 저장 완료!');
-  drawNoInput.value = '';
+  alert(`${lines.length}줄 저장 완료!`);
+  inputs.forEach((el) => {
+    el.value = '';
+  });
+  ticketImageInput.value = '';
+
   ticketList.innerHTML = '';
   cursor = null;
   hasMore = true;

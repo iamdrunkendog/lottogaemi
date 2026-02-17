@@ -18,7 +18,12 @@ button { cursor: pointer; background: #111827; color: white; border: none; }
 #auth-box { display: flex; align-items: center; gap: 8px; }
 button#load-more-btn { margin-top: 12px; width: 100%; background: #374151; }
 .hidden { display: none !important; }
-.save-box { margin-top: 12px; padding-top: 12px; border-top: 1px dashed #e5e7eb; }
+.tab-row { display: flex; gap: 8px; margin-top: 12px; }
+.tab-btn { background: #e5e7eb; color: #111827; }
+.tab-btn.active { background: #111827; color: #fff; }
+.panel { margin-top: 10px; display: grid; gap: 8px; }
+.manual-lines { display: grid; gap: 8px; }
+.manual-line { width: 100%; }
 .ticket { border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px; margin-top: 10px; background: #fff; }
 .nums { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
 .ball { width: 30px; height: 30px; border-radius: 999px; background: #eef2ff; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; }
