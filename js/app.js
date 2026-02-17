@@ -9,6 +9,8 @@ const generateBtn = document.getElementById('generate-btn');
 const generatedList = document.getElementById('generated-list');
 
 const recordCard = document.getElementById('record-card');
+const recordOpenBtn = document.getElementById('record-open-btn');
+const recordPanel = document.getElementById('record-panel');
 const recordDrawNoInput = document.getElementById('record-draw-no');
 const tabUploadBtn = document.getElementById('tab-upload');
 const tabManualBtn = document.getElementById('tab-manual');
@@ -51,6 +53,7 @@ tabUploadBtn.onclick = () => switchRecordTab('upload');
 tabManualBtn.onclick = () => switchRecordTab('manual');
 uploadAnalyzeBtn.onclick = onUploadAnalyzeAndSave;
 manualSaveBtn.onclick = onManualSave;
+recordOpenBtn.onclick = toggleRecordPanel;
 
 function switchRecordTab(mode) {
   const isUpload = mode === 'upload';
@@ -58,6 +61,11 @@ function switchRecordTab(mode) {
   tabManualBtn.classList.toggle('active', !isUpload);
   panelUpload.classList.toggle('hidden', !isUpload);
   panelManual.classList.toggle('hidden', isUpload);
+}
+
+function toggleRecordPanel() {
+  const isHidden = recordPanel.classList.toggle('hidden');
+  recordOpenBtn.textContent = isHidden ? '기록 등록 열기' : '기록 등록 닫기';
 }
 
 function getKstNow() {
@@ -117,6 +125,8 @@ watchAuth(async (user) => {
     userEmailEl.textContent = user.email;
     recordCard.classList.remove('hidden');
     drawCard.classList.remove('hidden');
+    recordPanel.classList.add('hidden');
+    recordOpenBtn.textContent = '기록 등록 열기';
     await loadTickets(false);
   } else {
     loginBtn.classList.remove('hidden');
@@ -124,6 +134,8 @@ watchAuth(async (user) => {
     userEmailEl.textContent = '';
     recordCard.classList.add('hidden');
     drawCard.classList.add('hidden');
+    recordPanel.classList.add('hidden');
+    recordOpenBtn.textContent = '기록 등록 열기';
     ticketList.innerHTML = '';
     loadMoreBtn.classList.add('hidden');
   }
