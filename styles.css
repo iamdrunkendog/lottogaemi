@@ -4,7 +4,10 @@ header { display: flex; justify-content: space-between; align-items: center; pad
 .brand { display: flex; align-items: center; gap: 12px; }
 .profile { width: 52px; height: 52px; border-radius: 999px; object-fit: cover; border: 1px solid #e5e7eb; }
 h1 { margin: 0; font-size: 22px; }
-.gaemi-line { max-width: 900px; margin: 12px auto 0; padding: 10px 12px; border-radius: 12px; background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412; font-weight: 600; }
+.gaemi-talk-wrap { max-width: 900px; margin: 12px auto 0; padding: 0 12px; display: flex; align-items: flex-start; gap: 10px; }
+.gaemi-talk-avatar { width: 42px; height: 42px; border-radius: 999px; object-fit: cover; border: 1px solid #e5e7eb; background: #fff; flex-shrink: 0; }
+.gaemi-line { position: relative; flex: 1; padding: 10px 12px; border-radius: 14px; background: #ffffff; border: 1px solid #e5e7eb; color: #111827; font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+.gaemi-line::before { content: ''; position: absolute; left: -7px; top: 13px; width: 12px; height: 12px; background: #fff; border-left: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb; transform: rotate(45deg); }
 main { max-width: 900px; margin: 14px auto 20px; padding: 0 12px; display: grid; gap: 16px; }
 .card { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; }
 .row { display: flex; gap: 8px; align-items: center; }
